@@ -11,7 +11,13 @@ let rl = readline.createInterface({
     output:process.stdout,
 });
 
-let socket = socketIoClient('http://127.0.0.1:8080');
+let localServer =true 
+
+let serverUrl = localServer     ///process.env.IS_DEV
+    ? "http://127.0.0.1:8080"
+    : "https//heroku.com"
+
+let socket = socketIoClient(serverUrl);
 
 
 socket.on('your turn', async() => {
@@ -22,25 +28,45 @@ socket.on('your turn', async() => {
 
 
 socket.on('info', message => {
-       
     console.log(message );
-    
+});
+
+socket.on('player moves',({playerXMoves,playerOMoves}) => {
+    drawGrid(playerXMoves,playerOMoves);
+
 });
 
 
 
 
-async function StartApp() {
-    while (true){
-    
-        let response = await rl.question('Enter a message and hit "Enter" to send: ');       
-        //let delayres = await delay(3000); 
-        socket.emit("new message",response);
-         
-    };
 
-};
+function drawVerticalLines(xMoves,oMoves,label) {
+    let space1Char = xMoves[0] ? 'X' : oMoves[0] ? 'O' : ' ';
+    let space2Char = xMoves[1] ? 'X' : oMoves[1] ? 'O' : ' ';
+    let space3Char = xMoves[2] ? 'X' : oMoves[2] ? 'O' : ' ';
+
+    console.log(`${label}  ${space1Char} | ${space2Char} | ${space3Char} `);
+}
+
+function drawNumberLabels(){
+    console.log('   1   2   3')
+}
+
+function drawHorizontalLines() {
+    console.log('  ---+---+---');
+}
 
 
- 
-//StartApp();
+function drawGrid(xMoves,oMoves) {
+    console.log();
+    drawNumberLabels()
+    drawVerticalLines(xMoves[0],oMoves[0],'A');
+    drawHorizontalLines();
+    drawVerticalLines(xMoves[1],oMoves[1],'B');
+    drawHorizontalLines();
+    drawVerticalLines(xMoves[2],oMoves[2],'C');
+    console.log();
+}
+
+
+
