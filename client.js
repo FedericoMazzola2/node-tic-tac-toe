@@ -20,11 +20,11 @@ let serverUrl = localServer     ///process.env.IS_DEV
 let socket = socketIoClient(serverUrl);
 
 
-socket.on('your turn', async() => {
-    let response = await rl.question('It\'s your turn now. Please enter your next move:');  
+//socket.on('your turn', async() => {
+     
     //console.log(`\nReceived a message: ${data}`);
     //process.stdout.write('Enter a message and hit "Enter" to send: ');
-});
+//});
 
 
 socket.on('info', message => {
@@ -36,8 +36,14 @@ socket.on('player moves',({playerXMoves,playerOMoves}) => {
 
 });
 
+socket.on('your turn', async() => {
+    let response = await rl.question('It\'s your turn now. Please enter your next move: ');
+    socket.emit("new move",response);
+});
 
-
+socket.on('other player turn', () => {
+     console.log("Wait for the other player\'s input")
+});
 
 
 function drawVerticalLines(xMoves,oMoves,label) {
