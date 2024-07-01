@@ -20,9 +20,15 @@ let playerOMoves = [
     [0,0,0],
 ];
 
+const RUNNING = 'RUNNING';
+const PLAYER_X_WINS = 'PLAYER_X_WINS';
+const PLAYER_O_WINS = 'PLAYER_O_WINS';
+const CATS_GAME  = 'CATS_GAME'
 
 let playerX;
 let playerO;
+let currentGameState = RUNNING;
+let gameIsOver = false;
 
 io.on('connection', socket => {
     
@@ -45,19 +51,36 @@ io.on('connection', socket => {
         let currentPlayerMoves = currentPlayer === 'Player X' ? playerXMoves : playerOMoves;
         currentPlayerMoves[yMove] [xMove] = 1;
 
+        currentGameState = getNextGameState(playerXMoves,playerOMoves);
+        gameIsOver = [PLAYER_X_WINS,PLAYER_O_WINS,CATS_GAME].includes(currentGameState);
+
         playerX.emit('player moves',{playerXMoves,playerOMoves});
         playerO.emit('player moves',{playerXMoves,playerOMoves});
 
         currentPlayer = currentPlayer === 'Player X' ? 'Player O' : 'Player X' ;
 
-        if (currentPlayer==='Player X'){
-            playerX.emit('your turn');
-            playerO.emit('other player turn');       
-        } else {
-            playerO.emit('your turn');
-            playerX.emit('other player turn');  
+        if(!gameIsOver) {
+            if (currentPlayer==='Player X'){          
+                playerX.emit('your turn');
+                playerO.emit('other player turn');       
+            } else {
+                playerO.emit('your turn');
+                playerX.emit('other player turn');  
+            }      
+            
+        } else {         
+            if (currentGameState === PLAYER_X_WINS) {
+                playerX.emit('win');
+                playerO.emit('lose');
+            } else if (currentGameState === PLAYER_O_WINS) {        
+                playerO.emit('win');
+                playerX.emit('lose');               
+            } else {
+                playerX.emit('tie');
+                playerO.emit('tie');
+            }
+
         }
-    
     });
   
 });
@@ -94,3 +117,36 @@ function startGame() {
 
 }  
 
+function getNextGameState(xMoves,oMoves){
+    let playerXWins = isHorizontalWin(xMoves) || isVerticalWin(xMoves) || isDiagonalWin(xMoves) || isCornerWin(xMoves);
+    let playerOWins = isHorizontalWin(oMoves) || isVerticalWin(oMoves) || isDiagonalWin(oMoves) || isCornerWin(oMoves);
+
+    if (playerXWins) {
+        return PLAYER_X_WINS;
+    }
+
+    if (playerOWins) {
+        return PLAYER_O_WINS;
+    }
+
+    return RUNNING;
+
+}
+
+function isHorizontalWin(moves){
+    //moves.some(row => console.log(row));
+    return moves.some(row => row.every (x=> x===1));
+}
+
+function isVerticalWin(moves){
+    return [0,1,2].some(columnNumber => moves.every(row => row[columnNumber]===1)); 
+}
+
+function isDiagonalWin(moves){
+     return (moves[0][0] === 1 && moves[1][1] === 1 && moves[2][2] === 1)
+     || (moves[0][2] === 1 && moves[1][1] === 1 && moves[2][0] === 1);
+}
+
+function isCornerWin(moves){
+    return (moves[0][0] === 1 && moves[0][2] === 1 && moves[2][0] === 1 && moves[2][2] === 1 );
+}

@@ -37,13 +37,41 @@ socket.on('player moves',({playerXMoves,playerOMoves}) => {
 });
 
 socket.on('your turn', async() => {
-    let response = await rl.question('It\'s your turn now. Please enter your next move: ');
+    let inputValid = false;
+    let response;
+    
+    while (!inputValid){
+        response = await rl.question('It\'s your turn now. Please enter your next move: ');
+        inputValid=isValidInput(response);
+    }
+    if (!inputValid) {
+        console.log("Invalid input value!!!")
+    }
     socket.emit("new move",response);
 });
 
 socket.on('other player turn', () => {
-     console.log("Wait for the other player\'s input")
+   console.log("Wait for the other player\'s input")
 });
+
+socket.on('win', () => {
+     console.log("The game is over ! You win!!");
+     rl.close();
+     socket.disconnect();
+});
+
+socket.on('lose', () => {
+    console.log("The game is over ! You lost!!");
+    rl.close();
+    socket.disconnect();
+});
+
+socket.on('tie', () => {
+    console.log("The game is over ! It\'s a tie.");
+    rl.close();
+    socket.disconnect();
+});
+
 
 
 function drawVerticalLines(xMoves,oMoves,label) {
@@ -74,5 +102,8 @@ function drawGrid(xMoves,oMoves) {
     console.log();
 }
 
-
+function isValidInput(input){
+    let [letter,number] = input.split('');
+    return ['A','B','C'].includes(letter) && ['1','2','3'].includes(number)
+}
 
