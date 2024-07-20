@@ -36,19 +36,33 @@ socket.on('player moves',({playerXMoves,playerOMoves}) => {
 
 });
 
-socket.on('your turn', async() => {
+
+async function getNextMove(prompt){
+
     let inputValid = false;
     let response;
-    
+
     while (!inputValid){
-        response = await rl.question('It\'s your turn now. Please enter your next move: ');
+        response = await rl.question(prompt);
         inputValid=isValidInput(response);
     }
     if (!inputValid) {
         console.log("Invalid input value!!!")
     }
     socket.emit("new move",response);
+}
+
+socket.on('your turn', () => {
+    getNextMove('It\'s your turn now. Please enter your next move: ');
 });
+
+
+socket.on('position taken', () => {
+    console.log("Sorry, that position is taken !!");
+    getNextMove('Please choose another (empty) position: ');
+ });
+
+
 
 socket.on('other player turn', () => {
    console.log("Wait for the other player\'s input")
